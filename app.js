@@ -66,6 +66,30 @@ app.get('/', function(req, res){
   res.render('home');
 });
 
+app.get('/kites', function(req, res){
+
+  var MongoClient = mongodb.MongoClient;
+  var url = 'mongodb://localhost:27017/kites';
+
+  MongoClient.connect(url, function(err, db){
+    if (err){
+      console.log(new Date() + ' : unable to connect to dB at ' + url + err);
+    } else {
+      console.log(new Date() + ' : connection established with ' + url);
+
+      var collection = db.collection('kites');
+
+      collection.find({'brand': 'North'}).toArray( function(e, docs) { //db call for userCollections
+        console.log('inside the find call', docs);
+
+        res.render('kites', {'kitelist' : docs}); // render handlebars page passing in the database
+      });
+        db.close();
+    }
+  });
+
+});
+
 // This is an example of middleware It receives a request
 // object, response object and the next function
 // As we look for the correct information to serve it executes
@@ -131,6 +155,7 @@ app.post('/process', function(req, res){
     } else {
       console.log(new Date() + ' : connection establised with ' + url);
       var collection = db.collection('contacts');
+      //noinspection JSDeprecatedSymbols
       collection.insert({
         'name' : req.body.companyName,
         'website': req.body.companyWebsite,
