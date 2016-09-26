@@ -10,8 +10,9 @@
 // you haven't defined any routes
 // Import the express module
 var express = require('express');
+var favicon = require('serve-favicon');
 
-var app = express();
+var app     = express();
 var mongodb = require('mongodb');
 
 // Block the header from containing information
@@ -25,15 +26,15 @@ app.disable('x-powered-by');
 // Create these files in the views directory and define the
 // HTML in them home.handlebars, about.handlebars,
 // 404.handlebars and 500.handlebars
-var handlebars = require('express-handlebars').create({defaultLayout:'main'});
-
+var handlebars = require('express-handlebars').create({defaultLayout: 'main'});
 app.engine('handlebars', handlebars.engine);
-
 app.set('view engine', 'handlebars');
 
 // Required when using POST to parse encoded data
 // npm install --save body-parser
 app.use(require('body-parser').urlencoded({extended: true}));
+
+app.use(favicon(__dirname + '/public/img/escow-favicon.png'));
 
 // Formidable is required to accept file uploads
 // npm install --save formidable
@@ -60,31 +61,31 @@ app.use(express.static(__dirname + '/public'));
 // contains the query string, parameters, body, header
 // The res object is the response Express sends
 // when it receives a request
-app.get('/', function(req, res){
+app.get('/', function (req, res) {
 
   // Point at the home.handlebars view
   res.render('home');
 });
 
-app.get('/kites', function(req, res){
+app.get('/kites', function (req, res) {
 
   var MongoClient = mongodb.MongoClient;
-  var url = 'mongodb://localhost:27017/kites';
+  var url         = 'mongodb://localhost:27017/kites';
 
-  MongoClient.connect(url, function(err, db){
-    if (err){
+  MongoClient.connect(url, function (err, db) {
+    if (err) {
       console.log(new Date() + ' : unable to connect to dB at ' + url + err);
     } else {
       console.log(new Date() + ' : connection established with ' + url);
 
       var collection = db.collection('kites');
 
-      collection.find({'brand': 'North'}).toArray( function(e, docs) { //db call for userCollections
+      collection.find({}).toArray(function (e, docs) { //db call for userCollections
         console.log('inside the find call', docs);
 
-        res.render('kites', {'kitelist' : docs}); // render handlebars page passing in the database
+        res.render('kites', {'kitelist': docs}); // render handlebars page passing in the database
       });
-        db.close();
+      db.close();
     }
   });
 
@@ -94,13 +95,13 @@ app.get('/kites', function(req, res){
 // object, response object and the next function
 // As we look for the correct information to serve it executes
 // and then next() says to continue down the pipeline
-app.use(function(req, res, next){
+app.use(function (req, res, next) {
   console.log('Looking for URL : ' + req.url);
   next();
 });
 
 // You can also report and throw errors
-app.get('/junk', function(req, res, next){
+app.get('/junk', function (req, res, next) {
   console.log('Tried to access /junk');
   throw new Error('/junk doesn\'t exist');
 });
@@ -110,64 +111,77 @@ app.get('/junk', function(req, res, next){
 // I think this is because it waterfalls from the function immediatey
 // above it and trickles down here.
 //  Need to investigate,  but I think the
-app.use(function(err, req, res, next){
+app.use(function (err, req, res, next) {
   console.log('Error : ' + err.message);
   next();
 });
 
 // If we want /about/contact we'd have to define it
 // before this route
-app.get('/about', function(req, res){
-  // Point at the about.handlebars view
-  // Allow for the test specified in tests-about.js
+app.get('/about', function (req, res) {
   res.render('about');
 });
 
 // Link to contact view
-app.get('/contact', function(req, res){
+app.get('/contact', function (req, res) {
 
   // CSRF tokens are generated in cookie and form data and
   // then they are verified when the user posts
-  res.render('contact', { csrf: 'CSRF token here' });
+  res.render('contact', {csrf: 'CSRF token here'});
 });
 
 // Sent here after the form is processed
-app.get('/thankyou', function(req, res){
+app.get('/thankyou', function (req, res) {
   res.render('thankyou');
 });
 
-// Receive the contact form data and then redirect to
-// thankyou.handlebars
-// contact.handlebars calls process to process the form
-app.post('/process', function(req, res){
-  console.log('Form : ' + req.query.form);
-  console.log('CSRF token : ' + req.body._csrf);
-  console.log('Company Name : ' + req.body.companyName);
-  console.log('Company Website : ' + req.body.companyWebsite);
-  console.log('Company City, state : ' + req.body.companyCityState);
+app.get('/addkite', function(req, res){
+  res.render('addkite');
+});
+
+
+
+app.post('/addkite', function (req, res) {
+
+  console.log(req.body);
+
+  // Parse a file that was uploaded
+  var form = new formidable.IncomingForm();
+  form.parse(req, function (err, fields, file) {
+    if (err)
+      return res.redirect(303, '/error');
+    console.log('Received File');
+
+    // Output file information
+    console.log(file);
+    res.redirect(303, '/thankyou');
+  });
+
 
   var MongoClient = mongodb.MongoClient;
-  var url = 'mongodb://localhost:27017/contacts';
+  var url         = 'mongodb://localhost:27017/kites';
 
-  MongoClient.connect(url, function(err, db){
-    if (err){
+  MongoClient.connect(url, function (err, db) {
+    if (err) {
       console.log(new Date() + ' : unable to connect to dB at ' + url + err);
     } else {
-      console.log(new Date() + ' : connection establised with ' + url);
-      var collection = db.collection('contacts');
+      console.log(new Date() + ' : connection established with ' + url);
+
+      var collection = db.collection('kites');
       //noinspection JSDeprecatedSymbols
       collection.insert({
-        'name' : req.body.companyName,
-        'website': req.body.companyWebsite,
-        'linkedin': req.body.companyLinkedin,
-        'location': req.body.companyCityState
-      }, function(err, result){
-        if (err){
-          console.log('failure writing to the DB');
-        } else {
-          console.log('success ' + result);
-        }
-        db.close();
+        'brand': req.body.brand,
+        'model': req.body.model,
+        'color': req.body.primarycolor,
+        'size' : req.body.size,
+        'secondary-color': req.body.secondarycolor},
+        function (err, result) {
+          if (err) {
+            console.log('failure writing to the DB');
+          } else {
+            console.log('success ' + result);
+          }
+          db.close();
       });
     }
 
@@ -179,45 +193,45 @@ app.post('/process', function(req, res){
 // Open file-upload.handlebars and store the current year
 // and month. When the form is submitted the year and month
 // will be passed
-app.get('/file-upload', function(req, res){
+app.get('/file-upload', function (req, res) {
   var now = new Date();
-  res.render('file-upload',{
-    year: now.getFullYear(),
-    month: now.getMonth() });
+  res.render('file-upload', {
+    year : now.getFullYear(),
+    month: now.getMonth()
   });
+});
 
 // file-upload.handlebars contains the form that calls here
-app.post('/file-upload/:year/:month',
-  function(req, res){
+app.post('/file-upload/:year/:month', function (req, res) {
 
     // Parse a file that was uploaded
     var form = new formidable.IncomingForm();
-    form.parse(req, function(err, fields, file){
-      if(err)
+    form.parse(req, function (err, fields, file) {
+      if (err)
         return res.redirect(303, '/error');
       console.log('Received File');
 
       // Output file information
       console.log(file);
-      res.redirect( 303, '/thankyou');
+      res.redirect(303, '/thankyou');
+    });
   });
-});
 
 // Demonstrate how to set a cookie
-app.get('/cookie', function(req, res){
+app.get('/cookie', function (req, res) {
 
   // Set the key and value as well as expiration
-  res.cookie('username', 'DerekBanas', {expire : new Date() + 9999}).send('username has the value of : DerekBanas');
+  res.cookie('username', 'DerekBanas', {expire: new Date() + 9999}).send('username has the value of : DerekBanas');
 });
 
 // Show stored cookies in the console
-app.get('/listcookies', function(req, res){
+app.get('/listcookies', function (req, res) {
   console.log("Cookies : ", req.cookies);
   res.send('Look in console for cookies');
 });
 
 // Delete a cookie
-app.get('/deletecookie', function(req, res){
+app.get('/deletecookie', function (req, res) {
   res.clearCookie('username');
   res.send('username Cookie Deleted');
 });
@@ -247,11 +261,11 @@ app.use(session({
 }));
 
 // This is another example of middleware.
-app.use(function(req, res, next){
+app.use(function (req, res, next) {
   var views = req.session.views;
 
   // If no views initialize an empty array
-  if(!views){
+  if (!views) {
     views = req.session.views = {};
   }
 
@@ -267,7 +281,7 @@ app.use(function(req, res, next){
 
 // When this page is accessed get the correct value from
 // the views array
-app.get('/viewcount', function(req, res, next){
+app.get('/viewcount', function (req, res, next) {
   res.send('You viewed this page ' + req.session.views['/viewcount'] + ' times ');
 });
 
@@ -275,45 +289,45 @@ app.get('/viewcount', function(req, res, next){
 // Import the File System module : npm install --save fs
 var fs = require("fs");
 
-app.get('/readfile', function(req, res, next){
+app.get('/readfile', function (req, res, next) {
 
   // Read the file provided and either return the contents
   // in data or an err
   fs.readFile('./public/randomfile.txt', function (err, data) {
-   if (err) {
-       return console.error(err);
-   }
-   res.send("The File : " + data.toString());
+    if (err) {
+      return console.error(err);
+    }
+    res.send("The File : " + data.toString());
   });
 
 });
 
 // This writes and then reads from a file
-app.get('/writefile', function(req, res, next){
+app.get('/writefile', function (req, res, next) {
 
   // If the file doesn't exist it is created and then you add
   // the text provided in the 2nd parameter
   fs.writeFile('./public/randomfile2.txt',
     'More random text', function (err) {
-   if (err) {
-       return console.error(err);
+      if (err) {
+        return console.error(err);
+      }
+    });
+
+  // Read the file like before
+  fs.readFile('./public/randomfile2.txt', function (err, data) {
+    if (err) {
+      return console.error(err);
     }
-  });
 
-    // Read the file like before
-   fs.readFile('./public/randomfile2.txt', function (err, data) {
-   if (err) {
-       return console.error(err);
-   }
-
-   res.send("The File : " + data.toString());
+    res.send("The File : " + data.toString());
   });
 
 });
 
 // Defines a custom 404 Page and we use app.use because
 // the request didn't match a route (Must follow the routes)
-app.use(function(req, res) {
+app.use(function (req, res) {
   // Define the content type
   res.type('text/html');
 
@@ -325,7 +339,7 @@ app.use(function(req, res) {
 });
 
 // Custom 500 Page
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   console.error(err.stack);
   res.status(500);
 
@@ -333,7 +347,7 @@ app.use(function(err, req, res, next) {
   res.render('500');
 });
 
-app.listen(app.get('port'), function(){
+app.listen(app.get('port'), function () {
   console.log('Express started on http://localhost:' +
     app.get('port') + '; press Ctrl-C to terminate');
 });
