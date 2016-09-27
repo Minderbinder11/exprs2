@@ -9,10 +9,18 @@ a {
 
 h2 {
     color: rgba(200, 100, 200, 1);
-
   }
 
 img {
-    height: 100px;
+    height: 25px;
+    }
 
+.circle {
+    width:  20px;
+    height: 20px;
+    border-radius: 20px;
+    border-color: #2B2922;
+    border-width: .5px;
+    display: inline-block;
+    box-shadow: 0 0 0 1px black;
     }

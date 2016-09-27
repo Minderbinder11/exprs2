@@ -14,7 +14,7 @@ var favicon = require('serve-favicon');
 var fs      = require("fs");
 var app     = express();
 var mongodb = require('mongodb');
-
+var dbutils = require('./dbutils');
 
 // Block the header from containing information
 // about the server
@@ -68,30 +68,37 @@ app.get('/', function (req, res) {
   res.render('home');
 });
 
+
+// GETS ALL NORTH KITES IN THE DB
+app.get('/kites/north', function (req, res) {
+
+  dbutils.showList(req, res, {'brand': 'North'});
+});
+
+// GETS ALL OZONE KITES IN THE DB
+app.get('/kites/ozone', function (req, res) {
+
+  dbutils.showList(req, res, {'brand': 'Ozone'});
+});
+
+// GETS ALL SLINGSHOT KITES IN THE DB
+app.get('/kites/slingshot', function (req, res) {
+
+  dbutils.showList(req, res, {'brand': 'Slingshot'});
+});
+
+// GETS ALL CABRINHA KITES IN THE DB
+app.get('/kites/cabrinha', function (req, res) {
+
+  dbutils.showList(req, res, {'brand': 'Cabrinha'});
+});
+
+// GETS ALL KITES IN THE DB - THIS MUST GO LAST OF ALL THE KITE PAGES
 app.get('/kites', function (req, res) {
 
-
-  var MongoClient = mongodb.MongoClient;
-  var url         = 'mongodb://localhost:27017/kites';
-
-  MongoClient.connect(url, function (err, db) {
-    if (err) {
-      console.log(new Date() + ' : unable to connect to dB at ' + url + err);
-    } else {
-      console.log(new Date() + ' : connection established with ' + url);
-
-      var collection = db.collection('kites');
-
-      collection.find({}).toArray(function (e, docs) { //db call for userCollections
-        console.log('inside the find call', docs);
-
-        res.render('kites', {'kitelist': docs}); // render handlebars page passing in the database
-      });
-      db.close();
-    }
-  });
-
+  dbutils.showList(req, res, {});
 });
+
 
 // This is an example of middleware It receives a request
 // object, response object and the next function

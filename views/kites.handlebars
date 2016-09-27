@@ -12,17 +12,19 @@
                 <th>#</th>
                 <th>Brand</th>
                 <th>Model</th>
-                <th>Primary Color</th>
-                <th>Secondary Color</th>
+                <th>Colors</th>
                 <th>Size</th>
+                <th>Picture</th>
             </tr>
             {{#each kitelist}}
                 <tr>
                     <td>{{@index}}</td>
                     <td>{{brand}}</td>
                     <td>{{model}}</td>
-                    <td>{{color}}</td>
-                    <td>{{secondary-color}}</td>
+                    <td>
+                        <div class="circle" style="background-color: {{color}}"></div>
+                        <div class="circle" style="background-color: {{secondary-color}}"></div>
+                    </td>
                     <td>{{size}}</td>
                     <td>
                         <img src="{{path}}"/>
