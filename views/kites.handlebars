@@ -9,6 +9,7 @@
         <!-- Table -->
         <table class="table">
             <tr>
+                <th>#</th>
                 <th>Brand</th>
                 <th>Model</th>
                 <th>Primary Color</th>
@@ -17,11 +18,15 @@
             </tr>
             {{#each kitelist}}
                 <tr>
+                    <td>{{@index}}</td>
                     <td>{{brand}}</td>
                     <td>{{model}}</td>
                     <td>{{color}}</td>
                     <td>{{secondary-color}}</td>
                     <td>{{size}}</td>
+                    <td>
+                        <img src="{{path}}"/>
+                    </td>
                 </tr>
             {{/each}}
         </table>

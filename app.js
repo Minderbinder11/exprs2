@@ -11,9 +11,10 @@
 // Import the express module
 var express = require('express');
 var favicon = require('serve-favicon');
-
+var fs      = require("fs");
 var app     = express();
 var mongodb = require('mongodb');
+
 
 // Block the header from containing information
 // about the server
@@ -68,6 +69,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/kites', function (req, res) {
+
 
   var MongoClient = mongodb.MongoClient;
   var url         = 'mongodb://localhost:27017/kites';
@@ -135,58 +137,58 @@ app.get('/thankyou', function (req, res) {
   res.render('thankyou');
 });
 
-app.get('/addkite', function(req, res){
+app.get('/addkite', function (req, res) {
   res.render('addkite');
 });
 
 
-
 app.post('/addkite', function (req, res) {
 
-  console.log(req.body);
-
-  // Parse a file that was uploaded
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, file) {
     if (err)
       return res.redirect(303, '/error');
-    console.log('Received File');
 
-    // Output file information
-    console.log(file);
-    res.redirect(303, '/thankyou');
-  });
+    var path = __dirname + "/public/img/uploads/" + file.photo.name;
 
+    console.log('old path : ' + file.photo.path);
+    console.log('new path : ' + path);
+    fs.rename(file.photo.path, path, function (err, data) {
+      if (err)
+        return res.redirect(303, '/error');
 
-  var MongoClient = mongodb.MongoClient;
-  var url         = 'mongodb://localhost:27017/kites';
+      var MongoClient = mongodb.MongoClient;
+      var url         = 'mongodb://localhost:27017/kites';
 
-  MongoClient.connect(url, function (err, db) {
-    if (err) {
-      console.log(new Date() + ' : unable to connect to dB at ' + url + err);
-    } else {
-      console.log(new Date() + ' : connection established with ' + url);
+      MongoClient.connect(url, function (err, db) {
+        if (err) {
+          console.log(new Date() + ' : unable to connect to dB at ' + url + err);
+        } else {
+          console.log(new Date() + ' : connection established with ' + url);
 
-      var collection = db.collection('kites');
-      //noinspection JSDeprecatedSymbols
-      collection.insert({
-        'brand': req.body.brand,
-        'model': req.body.model,
-        'color': req.body.primarycolor,
-        'size' : req.body.size,
-        'secondary-color': req.body.secondarycolor},
-        function (err, result) {
-          if (err) {
-            console.log('failure writing to the DB');
-          } else {
-            console.log('success ' + result);
-          }
-          db.close();
+          var collection = db.collection('kites');
+          //noinspection JSDeprecatedSymbols
+          collection.insert(
+            {
+              'brand'          : fields.brand,
+              'model'          : fields.model,
+              'color'          : fields.primarycolor,
+              'size'           : fields.size,
+              'secondary-color': fields.secondarycolor,
+              'path'           : path
+            },
+            function (err, result) {
+              if (err) {
+                console.log('failure writing to the DB');
+              } else {
+                console.log('success ' + result);
+              }
+              db.close();
+            });
+        }
       });
-    }
-
+    });
   });
-
   res.redirect(303, '/thankyou');
 });
 
@@ -204,18 +206,19 @@ app.get('/file-upload', function (req, res) {
 // file-upload.handlebars contains the form that calls here
 app.post('/file-upload/:year/:month', function (req, res) {
 
-    // Parse a file that was uploaded
-    var form = new formidable.IncomingForm();
-    form.parse(req, function (err, fields, file) {
-      if (err)
-        return res.redirect(303, '/error');
-      console.log('Received File');
+  // Parse a file that was uploaded
+  var form = new formidable.IncomingForm();
+  form.parse(req, function (err, fields, file) {
+    if (err)
+      return res.redirect(303, '/error');
+    console.log('Received File');
 
-      // Output file information
-      console.log(file);
-      res.redirect(303, '/thankyou');
-    });
+    // Output file information
+    console.log(file);
+    console.log(file.photo.name);
+    res.redirect(303, '/thankyou');
   });
+});
 
 // Demonstrate how to set a cookie
 app.get('/cookie', function (req, res) {
@@ -287,7 +290,7 @@ app.get('/viewcount', function (req, res, next) {
 
 // Reading and writing to the file system
 // Import the File System module : npm install --save fs
-var fs = require("fs");
+
 
 app.get('/readfile', function (req, res, next) {
 

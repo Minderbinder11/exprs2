@@ -13,6 +13,7 @@
     "express-handlebars": "^3.0.0",
     "express-session": "^1.14.1",
     "formidable": "^1.0.17",
+    "fs": "0.0.1-security",
     "handlebars": "^4.0.5",
     "jade": "~1.11.0",
     "kerberos": "~0.0.17",
